@@ -30,7 +30,8 @@
   .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
   .tag.footing{background:#e7f0f5;color:var(--steel)} .tag.wall{background:#fdece4;color:#c0410f}
   input,select,button{font-family:var(--ui);font-size:16px}
-  input[type=text],input[type=number],select{width:100%;padding:11px 10px;border:1px solid var(--hair);border-radius:9px;background:var(--field);color:var(--ink);appearance:none}
+  input[type=text],input[type=number],select,textarea{width:100%;padding:11px 10px;border:1px solid var(--hair);border-radius:9px;background:var(--field);color:var(--ink);appearance:none;font-family:var(--ui)}
+  textarea{min-height:64px;resize:vertical;line-height:1.4}
   input:focus,select:focus{outline:2px solid var(--steel);outline-offset:1px;border-color:var(--steel)}
   label.fld{display:block} label.fld .lab{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 3px 2px;font-weight:700}
   .lbl-input{border:none;background:transparent;font-size:16px;font-weight:700;padding:6px 2px;flex:1;min-width:0}
@@ -63,6 +64,33 @@
   .total .meta{font-family:var(--mono);font-size:11px;color:#c3d0da;text-align:right}
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:22px 8px}
   .note{font-size:11px;color:var(--muted);margin:8px 2px 0;line-height:1.5}
+  .printbtn{width:100%;margin-top:8px;border:none;background:#12212b;color:#fff;border-radius:10px;padding:13px;font-weight:700;font-size:14px;cursor:pointer;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .printbtn:active{background:#1c3140}
+  /* ---------- printable customer quote ---------- */
+  .printonly{display:none}
+  .quote{max-width:720px;margin:0 auto;padding:28px;color:#141a1f;font-family:var(--ui)}
+  .quote .q-top{border-bottom:3px solid var(--hivis);padding-bottom:12px;margin-bottom:18px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .quote .q-co{font-size:26px;font-weight:700;letter-spacing:.02em}
+  .quote .q-co-line{font-size:12px;color:var(--muted);margin-top:5px;white-space:pre-line;line-height:1.5}
+  .quote .q-title{float:right;font-family:var(--mono);font-size:13px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;font-weight:700}
+  .quote .q-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;margin-bottom:22px;font-size:13px}
+  .quote .q-meta span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:9px;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .quote .q-table{width:100%;border-collapse:collapse;font-size:14px}
+  .quote .q-table th{text-align:left;text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--muted);border-bottom:2px solid #141a1f;padding:6px 4px;font-weight:700}
+  .quote .q-table th:last-child,.quote .q-table td:last-child{text-align:right;font-family:var(--mono)}
+  .quote .q-table td{padding:10px 4px;border-bottom:1px solid var(--hair);vertical-align:top}
+  .quote .q-sub{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .quote .q-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:12px;border-top:2px solid #141a1f}
+  .quote .q-total span{text-transform:uppercase;letter-spacing:.1em;font-size:12px;font-weight:700}
+  .quote .q-total b{font-family:var(--mono);font-size:24px}
+  .quote .q-notes{margin-top:22px;font-size:12px;white-space:pre-line;line-height:1.5}
+  .quote .q-h{text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--muted);font-weight:700;margin-bottom:5px}
+  .quote .q-valid{margin-top:24px;font-size:11px;color:var(--muted);border-top:1px dashed var(--hair);padding-top:12px;line-height:1.5}
+  @media print{
+    html,body{background:#fff!important;margin:0;padding:0}
+    .screen{display:none!important}
+    .printonly{display:block!important}
+  }
 </style>
 </head>
 <body>
@@ -243,16 +271,91 @@ function Rates({r,onChange}){
 
 const DEFAULT_RATES={pricePerTon:1300,crewWage:85,lapFactor:40,stockLength:40,
   contingencyPct:3,accessoriesPerTon:40,overheadPct:10,profitPct:10,otherCost:0,coating:"black",epoxyPct:25};
+const DEFAULT_QUOTE={companyName:"",companyLine:"",clientName:"",jobName:"",quoteNumber:"",date:"",validDays:30,notes:""};
 const sampleMembers=()=>[newFooting(),newWall()];
+
+function QuoteDetails({q,onChange}){
+  const s=(k,v)=>onChange({...q,[k]:v});
+  const T=(k,lab,ph)=> <Field lab={lab}><input type="text" value={q[k]} placeholder={ph||""} onChange={e=>s(k,e.target.value)}/></Field>;
+  const hStyle={fontSize:12,textTransform:"uppercase",letterSpacing:".14em",color:"var(--muted)",margin:0};
+  return (
+    <details className="rates card">
+      <summary><div className="ratehead">
+        <h2 style={hStyle}>Quote details — for printout</h2>
+        <span className="caret">tap to fold</span></div></summary>
+      <div className="grid g2" style={{marginTop:12}}>
+        {T("companyName","Your company","ACME Rebar & Concrete")}
+        {T("quoteNumber","Quote #","2026-014")}
+      </div>
+      <div style={{marginTop:8}}>
+        <Field lab="Contact & license (one per line)">
+          <textarea value={q.companyLine} placeholder={"(555) 123-4567\nbids@acmerebar.com\nLic. #123456"} onChange={e=>s("companyLine",e.target.value)}/>
+        </Field>
+      </div>
+      <div className="grid g2" style={{marginTop:8}}>
+        {T("clientName","Client / customer","General Contractor Inc.")}
+        {T("jobName","Project / job","Miller warehouse — footings")}
+      </div>
+      <div className="grid g2" style={{marginTop:8}}>
+        <Field lab="Valid for (days)"><NumIn value={q.validDays} onChange={e=>s("validDays",e.target.value)}/></Field>
+        {T("date","Date (blank = today)","")}
+      </div>
+      <div style={{marginTop:8}}>
+        <Field lab="Scope & exclusions (optional)">
+          <textarea value={q.notes} placeholder={"Furnish and install reinforcing steel per drawings.\nExcludes: excavation, concrete, embeds, tax."} onChange={e=>s("notes",e.target.value)}/>
+        </Field>
+      </div>
+      <button className="printbtn" onClick={()=>window.print()}>Print / Save as PDF quote</button>
+      <div className="note">The printed quote shows customer-facing line prices only — your overhead and profit are baked into the totals, not shown separately.</div>
+    </details>
+  );
+}
+
+function PrintQuote({q,est}){
+  const t=est.totals;
+  const dateStr=(q.date&&q.date.trim())?q.date:new Date().toLocaleDateString();
+  const sumLT=est.rows.reduce((s,x)=>s+x.lineTotal,0);
+  const prices=est.rows.map(x=>Math.round((sumLT>0?t.bid*x.lineTotal/sumLT:0)*100)/100);
+  if(prices.length){ const diff=Math.round((t.bid-prices.reduce((s,v)=>s+v,0))*100)/100; prices[prices.length-1]+=diff; }
+  return (
+    <div className="printonly quote">
+      <div className="q-top">
+        <span className="q-title">Quote</span>
+        <div className="q-co">{q.companyName||"Your Company"}</div>
+        {q.companyLine && <div className="q-co-line">{q.companyLine}</div>}
+      </div>
+      <div className="q-meta">
+        <div><span>Quote for</span>{q.clientName||"—"}</div>
+        <div><span>Project</span>{q.jobName||"—"}</div>
+        <div><span>Date</span>{dateStr}</div>
+        {q.quoteNumber && <div><span>Quote #</span>{q.quoteNumber}</div>}
+      </div>
+      <table className="q-table">
+        <thead><tr><th>Description</th><th>Amount</th></tr></thead>
+        <tbody>
+          {est.rows.map((x,i)=>(<tr key={i}>
+            <td>{x.label}<span className="q-sub">Furnish &amp; install {x.type} reinforcing · {x.buyTons.toFixed(2)} tons</span></td>
+            <td>{money2(prices[i])}</td>
+          </tr>))}
+          {est.rows.length===0 && <tr><td>No items</td><td>—</td></tr>}
+        </tbody>
+      </table>
+      <div className="q-total"><span>Total</span><b>{money2(t.bid)}</b></div>
+      {q.notes && q.notes.trim() && <div className="q-notes"><div className="q-h">Scope &amp; exclusions</div>{q.notes}</div>}
+      <div className="q-valid">This quote is valid for {num(q.validDays)||30} days from the date above. Prices are subject to change thereafter. This is a proposal, not a stamped estimate.</div>
+    </div>
+  );
+}
 
 function App(){
   const [members,setMembers]=useState(sampleMembers());
   const [rates,setRates]=useState(DEFAULT_RATES);
+  const [quote,setQuote]=useState(DEFAULT_QUOTE);
   const est=useMemo(()=>estimate(members,rates),[members,rates]);
   const upd=(id,m)=>setMembers(members.map(x=>x.id===id?m:x));
   const rm=id=>setMembers(members.filter(x=>x.id!==id));
   const loadSample=()=>{setMembers(sampleMembers());setRates(DEFAULT_RATES);};
-  const resetAll=()=>{setMembers([]);setRates(DEFAULT_RATES);};
+  const resetAll=()=>{setMembers([]);setRates(DEFAULT_RATES);setQuote(DEFAULT_QUOTE);};
   const t=est.totals;
   const perTon=t.installedTons>0 ? t.bid/t.installedTons : 0;
 
@@ -277,6 +380,7 @@ function App(){
 
   return (
     <div>
+     <div className="screen">
       <header className="top"><div className="wrap">
         <div className="brand"><h1>REBAR&nbsp;BID</h1><span className="sub">footings &amp; walls</span></div>
         <div className="rule"></div></div></header>
@@ -298,6 +402,8 @@ function App(){
         </section>
 
         <section><Rates r={rates} onChange={setRates}/></section>
+
+        <section><QuoteDetails q={quote} onChange={setQuote}/></section>
 
         <section>
           <div className="h"><h2>Schedule of values</h2></div>
@@ -322,6 +428,7 @@ function App(){
               <div className="k big">Bid &divide; ton installed</div><div className="v big">{perTon>0?money(perTon)+"/t":"—"}</div>
             </div>
             <button className="exportbtn" onClick={exportCSV}>Export SOV + weight summary (CSV)</button>
+            <button className="printbtn" onClick={()=>window.print()}>Print / Save as PDF quote</button>
           </div>
         </section>
 
@@ -348,6 +455,8 @@ function App(){
         <div><div className="lbl">Bid total</div><div className="amt">{money(t.bid)}</div></div>
         <div className="meta">{perTon>0?money(perTon)+"/ton":""}<br/>{t.buyTons.toFixed(2)} tons · {t.laborHours.toFixed(0)} hrs</div>
       </div></div>
+     </div>
+     <PrintQuote q={quote} est={est}/>
     </div>
   );
 }
