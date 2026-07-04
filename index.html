@@ -32,6 +32,7 @@
   .member .mhead{display:flex;gap:8px;align-items:center;margin-bottom:10px}
   .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
   .tag.footing{background:#e7f0f5;color:var(--steel)} .tag.wall{background:#fdece4;color:#c0410f}
+  .tag.pier{background:#eae7f5;color:#5b3fa0} .tag.slab{background:#e7f5ec;color:#1f7346} .tag.gradebeam{background:#f5f0e7;color:#8a6a1f}
   input,select,button{font-family:var(--ui);font-size:16px}
   input[type=text],input[type=number],select,textarea{width:100%;padding:11px 10px;border:1px solid var(--hair);border-radius:9px;background:var(--field);color:var(--ink);appearance:none;font-family:var(--ui)}
   textarea{min-height:64px;resize:vertical;line-height:1.4}
@@ -49,7 +50,7 @@
   .splice{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;color:#c0410f;background:#fdece4;border-radius:5px;padding:1px 5px;margin-right:6px}
   .mini{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;padding:6px 4px;cursor:pointer} .mini:hover{color:var(--hivis)}
   .addline{width:100%;border:1px dashed var(--hair);background:#fff;color:var(--steel);border-radius:9px;padding:9px;font-weight:700;font-size:13px;cursor:pointer}
-  .addmem{display:flex;gap:10px} .addmem button{flex:1;border:1px solid var(--steel);background:#fff;color:var(--steel);border-radius:11px;padding:13px;font-weight:700;font-size:14px;cursor:pointer} .addmem button:active{background:#eef4f7}
+  .addmem{display:flex;gap:8px;flex-wrap:wrap} .addmem button{flex:1 1 30%;min-width:92px;border:1px solid var(--steel);background:#fff;color:var(--steel);border-radius:11px;padding:12px 6px;font-weight:700;font-size:13px;cursor:pointer} .addmem button:active{background:#eef4f7}
   details.rates summary{list-style:none;cursor:pointer} details.rates summary::-webkit-details-marker{display:none}
   .ratehead{display:flex;align-items:center;justify-content:space-between} .caret{font-family:var(--mono);color:var(--muted);font-size:12px}
   .seg{display:flex;gap:6px;margin-top:4px} .seg .chip{flex:1}
@@ -83,7 +84,10 @@
   .quote .q-table th:last-child,.quote .q-table td:last-child{text-align:right;font-family:var(--mono)}
   .quote .q-table td{padding:10px 4px;border-bottom:1px solid var(--hair);vertical-align:top}
   .quote .q-sub{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
-  .quote .q-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;padding-top:12px;border-top:2px solid #141a1f}
+  .quote .q-line{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;font-family:var(--mono)}
+  .quote .q-line span{font-family:var(--ui);color:var(--muted)}
+  .quote .q-sumwrap{margin-top:12px;border-top:1px solid var(--hair);padding-top:8px}
+  .quote .q-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:12px;border-top:2px solid #141a1f}
   .quote .q-total span{text-transform:uppercase;letter-spacing:.1em;font-size:12px;font-weight:700}
   .quote .q-total b{font-family:var(--mono);font-size:24px}
   .quote .q-notes{margin-top:22px;font-size:12px;white-space:pre-line;line-height:1.5}
@@ -109,11 +113,28 @@ const UNIT_WEIGHT = {3:0.376,4:0.668,5:1.043,6:1.502,7:2.044,8:2.670,9:3.400,10:
 const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
 const barDiaIn = size => num(size)/8;
 const lapLenFt = (size,lapFactor) => lapFactor*barDiaIn(size)/12;
+/* bent-bar shapes: cut length = sum of legs (tie = perimeter + closing hooks) */
+const SHAPES={
+  straight:{label:"Straight",legs:[]},
+  corner:{label:"L-bend / dowel",legs:[["a","Leg A"],["b","Leg B"]]},
+  hook:{label:"Hook end",legs:[["a","Leg"],["b","Hook"]]},
+  ubar:{label:"U-bar / stirrup",legs:[["a","Leg A"],["b","Base"],["c","Leg B"]]},
+  tie:{label:"Tie (closed)",legs:[["a","Width"],["b","Height"]],mult:2,hook:0.5},
+};
+function cutLength(l){
+  const shape=l.shape||"straight", sh=SHAPES[shape]||SHAPES.straight;
+  if(shape==="straight") return num(l.lengthEach);
+  const lg=l.legs||{};
+  let sum=sh.legs.reduce((s,[k])=>s+num(lg[k]),0);
+  if(sh.mult) sum*=sh.mult;
+  if(sh.hook) sum+=sh.hook;
+  return sum;
+}
 function lineCount(l){ if(l.mode==="count") return num(l.count);
   const s=num(l.spacing); if(s<=0) return 0; return (Math.floor((num(l.run)*12)/s)+1)*(num(l.layers)||1); }
-const lineLF = l => lineCount(l)*num(l.lengthEach);
+const lineLF = l => lineCount(l)*cutLength(l);
 function lineGeom(l,rates){
-  const count=lineCount(l), cut=num(l.lengthEach), stock=num(rates.stockLength)||0, lap=lapLenFt(num(l.size),num(rates.lapFactor));
+  const count=lineCount(l), cut=cutLength(l), stock=num(rates.stockLength)||0, lap=lapLenFt(num(l.size),num(rates.lapFactor));
   let splicesPerBar=0, installedEachFt=cut;
   if(stock>0 && cut>stock && lap>0){ splicesPerBar=Math.ceil(cut/stock)-1; installedEachFt=cut+splicesPerBar*lap; }
   const uw=UNIT_WEIGHT[num(l.size)]||0;
@@ -153,10 +174,11 @@ function estimate(members,r){
   const sizeSummary=Object.values(bySize).sort((a,b)=>a.size-b.size);
   const sum=k=>rows.reduce((s,x)=>s+x[k],0);
   const directCost=sum("lineTotal")+num(r.otherCost);
-  const withOverhead=directCost*(1+num(r.overheadPct)/100), bid=withOverhead*(1+num(r.profitPct)/100);
+  const withOverhead=directCost*(1+num(r.overheadPct)/100), preTax=withOverhead*(1+num(r.profitPct)/100);
+  const tax=preTax*num(r.taxPct)/100, bid=preTax+tax;
   return {rows,sizeSummary,totals:{installedTons:sum("installedTons"),buyTons:sum("buyTons"),pieces:sum("pieces"),
     materialCost:sum("materialCost"),laborCost:sum("laborCost"),laborHours:sum("laborHours"),accessories:sum("accessories"),
-    otherCost:num(r.otherCost),coatingMult,directCost,overhead:withOverhead-directCost,withOverhead,profit:bid-withOverhead,bid}};
+    otherCost:num(r.otherCost),coatingMult,directCost,overhead:withOverhead-directCost,withOverhead,profit:preTax-withOverhead,preTax,tax,bid}};
 }
 /* ------------------------------------------------------------------------ */
 
@@ -168,6 +190,15 @@ const newFooting=()=>({id:uid(),type:"footing",label:"Strip footing",mhPerTon:12
 const newWall=()=>({id:uid(),type:"wall",label:"Foundation wall",mhPerTon:9.5,lines:[
   {id:uid(),mode:"spacing",size:4,run:20,spacing:12,lengthEach:8,layers:2},
   {id:uid(),mode:"spacing",size:4,run:8,spacing:12,lengthEach:20,layers:2}]});
+const newPier=()=>({id:uid(),type:"pier",label:"Pier / column",mhPerTon:14,lines:[
+  {id:uid(),mode:"count",size:8,count:8,lengthEach:12},
+  {id:uid(),mode:"spacing",size:4,shape:"tie",legs:{a:1.33,b:1.33},run:12,spacing:12,layers:1}]});
+const newSlab=()=>({id:uid(),type:"slab",label:"Slab on grade",mhPerTon:8,lines:[
+  {id:uid(),mode:"spacing",size:4,run:40,spacing:12,lengthEach:30,layers:1},
+  {id:uid(),mode:"spacing",size:4,run:30,spacing:12,lengthEach:40,layers:1}]});
+const newGradebeam=()=>({id:uid(),type:"gradebeam",label:"Grade beam",mhPerTon:11,lines:[
+  {id:uid(),mode:"count",size:6,count:4,lengthEach:60},
+  {id:uid(),mode:"spacing",size:4,shape:"tie",legs:{a:1.5,b:2},run:60,spacing:12,layers:1}]});
 const newCountLine=()=>({id:uid(),mode:"count",size:5,count:1,lengthEach:20});
 const newSpacingLine=()=>({id:uid(),mode:"spacing",size:4,run:20,spacing:12,lengthEach:8,layers:1});
 
@@ -177,34 +208,43 @@ function SizeSel({value,onChange}){return <select value={value} onChange={onChan
 
 function Line({line,rates,onChange,onRemove}){
   const set=(k,v)=>onChange({...line,[k]:v});
+  const shape=line.shape||"straight", sh=SHAPES[shape];
+  const setLeg=(k,v)=>onChange({...line,legs:{...(line.legs||{}),[k]:v}});
   const g=lineGeom(line,rates);
+  const legVal=k=>{const v=(line.legs||{})[k]; return v===undefined?"":v;};
+  const lenOrLegs = shape==="straight"
+    ? <Field lab="Bar length ft"><NumIn value={line.lengthEach} onChange={e=>set("lengthEach",e.target.value)}/></Field>
+    : <div className={"grid "+(sh.legs.length>=3?"g3":"g2")}>
+        {sh.legs.map(([k,lab])=><Field key={k} lab={lab+" ft"}><NumIn value={legVal(k)} onChange={e=>setLeg(k,e.target.value)}/></Field>)}
+      </div>;
   return (
     <div className="line">
       <div className="modes">
         <div className={"chip"+(line.mode==="count"?" on":"")} onClick={()=>set("mode","count")}>By count</div>
         <div className={"chip"+(line.mode==="spacing"?" on":"")} onClick={()=>set("mode","spacing")}>By spacing</div>
       </div>
+      <div className="grid g2">
+        <Field lab="Bar"><SizeSel value={line.size} onChange={e=>set("size",e.target.value)}/></Field>
+        <Field lab="Shape"><select value={shape} onChange={e=>set("shape",e.target.value)}>{Object.entries(SHAPES).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></Field>
+      </div>
       {line.mode==="count" ? (
-        <div className="grid g3">
-          <Field lab="Bar"><SizeSel value={line.size} onChange={e=>set("size",e.target.value)}/></Field>
+        <div className="grid g2" style={{marginTop:8}}>
           <Field lab="Count"><NumIn value={line.count} onChange={e=>set("count",e.target.value)}/></Field>
-          <Field lab="Length ft"><NumIn value={line.lengthEach} onChange={e=>set("lengthEach",e.target.value)}/></Field>
+          {shape==="straight" && lenOrLegs}
         </div>
       ) : (
-        <div>
-          <div className="grid g4">
-            <Field lab="Bar"><SizeSel value={line.size} onChange={e=>set("size",e.target.value)}/></Field>
-            <Field lab="Run ft"><NumIn value={line.run} onChange={e=>set("run",e.target.value)}/></Field>
-            <Field lab="Spc in"><NumIn value={line.spacing} onChange={e=>set("spacing",e.target.value)}/></Field>
-            <Field lab="Layers"><NumIn value={line.layers} onChange={e=>set("layers",e.target.value)}/></Field>
-          </div>
-          <div style={{marginTop:8}}><Field lab="Bar length ft"><NumIn value={line.lengthEach} onChange={e=>set("lengthEach",e.target.value)}/></Field></div>
+        <div className="grid g3" style={{marginTop:8}}>
+          <Field lab="Run ft"><NumIn value={line.run} onChange={e=>set("run",e.target.value)}/></Field>
+          <Field lab="Spc in"><NumIn value={line.spacing} onChange={e=>set("spacing",e.target.value)}/></Field>
+          <Field lab="Layers"><NumIn value={line.layers} onChange={e=>set("layers",e.target.value)}/></Field>
         </div>
       )}
+      {(shape!=="straight" || line.mode==="spacing") && <div style={{marginTop:8}}>{lenOrLegs}</div>}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <button className="mini" onClick={onRemove}>Remove bar</button>
         <div className="lf">
           {g.splicesPerBar>0 && <span className="splice">{g.splicesPerBar} splice{g.splicesPerBar>1?"s":""}/bar</span>}
+          {shape!=="straight" && <span>{sh.label} · cut {g.cut.toFixed(1)} ft · </span>}
           {g.count} bars · <b>{Math.round(g.installedLF)} LF</b> · <b>{Math.round(g.installedWeight)} lb</b>
         </div>
       </div>
@@ -258,6 +298,7 @@ function Rates({r,onChange}){
         {f("overheadPct","Overhead %")}
         {f("profitPct","Profit %")}
         {f("otherCost","Freight / fab $")}
+        {f("taxPct","Sales tax %")}
         {r.coating==="epoxy" && f("epoxyPct","Epoxy premium %")}
       </div>
       <div style={{marginTop:10}}>
@@ -273,7 +314,7 @@ function Rates({r,onChange}){
 }
 
 const DEFAULT_RATES={pricePerTon:1300,crewWage:85,lapFactor:40,stockLength:40,
-  contingencyPct:3,accessoriesPerTon:40,overheadPct:10,profitPct:10,otherCost:0,coating:"black",epoxyPct:25};
+  contingencyPct:3,accessoriesPerTon:40,overheadPct:10,profitPct:10,otherCost:0,taxPct:0,coating:"black",epoxyPct:25};
 const DEFAULT_QUOTE={companyName:"",companyLine:"",clientName:"",jobName:"",quoteNumber:"",date:"",validDays:30,notes:""};
 const sampleMembers=()=>[newFooting(),newWall()];
 
@@ -316,10 +357,12 @@ function QuoteDetails({q,onChange}){
 
 function PrintQuote({q,est}){
   const t=est.totals;
+  const base=(t.preTax!==undefined)?t.preTax:t.bid;
+  const hasTax=t.tax>0.005;
   const dateStr=(q.date&&q.date.trim())?q.date:new Date().toLocaleDateString();
   const sumLT=est.rows.reduce((s,x)=>s+x.lineTotal,0);
-  const prices=est.rows.map(x=>Math.round((sumLT>0?t.bid*x.lineTotal/sumLT:0)*100)/100);
-  if(prices.length){ const diff=Math.round((t.bid-prices.reduce((s,v)=>s+v,0))*100)/100; prices[prices.length-1]+=diff; }
+  const prices=est.rows.map(x=>Math.round((sumLT>0?base*x.lineTotal/sumLT:0)*100)/100);
+  if(prices.length){ const diff=Math.round((base-prices.reduce((s,v)=>s+v,0))*100)/100; prices[prices.length-1]+=diff; }
   return (
     <div className="printonly quote">
       <div className="q-top">
@@ -343,6 +386,10 @@ function PrintQuote({q,est}){
           {est.rows.length===0 && <tr><td>No items</td><td>—</td></tr>}
         </tbody>
       </table>
+      {hasTax && <div className="q-sumwrap">
+        <div className="q-line"><span>Subtotal</span>{money2(base)}</div>
+        <div className="q-line"><span>Sales tax</span>{money2(t.tax)}</div>
+      </div>}
       <div className="q-total"><span>Total</span><b>{money2(t.bid)}</b></div>
       {q.notes && q.notes.trim() && <div className="q-notes"><div className="q-h">Scope &amp; exclusions</div>{q.notes}</div>}
       <div className="q-valid">This quote is valid for {num(q.validDays)||30} days from the date above. Prices are subject to change thereafter. This is a proposal, not a stamped estimate.</div>
@@ -372,6 +419,8 @@ function App(){
     rows.push(["Direct cost","","","","","","","","",t.directCost.toFixed(2)]);
     rows.push(["Overhead","","","","","","","","",t.overhead.toFixed(2)]);
     rows.push(["Profit","","","","","","","","",t.profit.toFixed(2)]);
+    rows.push(["Subtotal (pre-tax)","","","","","","","","",t.preTax.toFixed(2)]);
+    rows.push(["Sales tax","","","","","","","","",t.tax.toFixed(2)]);
     rows.push(["BID TOTAL","","","","","","","","",t.bid.toFixed(2)]);
     rows.push([]); rows.push(["WEIGHT SUMMARY"]);
     rows.push(["Bar size","Pieces","Installed lb","Sticks to order","Buy lb"]);
@@ -385,7 +434,7 @@ function App(){
     <div>
      <div className="screen">
       <header className="top"><div className="wrap">
-        <div className="brand"><h1>REBAR&nbsp;BID</h1><span className="sub">footings &amp; walls</span></div>
+        <div className="brand"><h1>REBAR&nbsp;BID</h1><span className="sub">concrete reinforcing</span></div>
         <div className="rule"></div></div></header>
 
       <div className="wrap">
@@ -396,11 +445,14 @@ function App(){
               <button className="mini" onClick={resetAll}>Reset</button>
             </div>
           </div>
-          {members.length===0 && <div className="card empty">No members yet. Add a footing or wall to start.</div>}
+          {members.length===0 && <div className="card empty">No members yet. Add a member to start.</div>}
           {members.map(m=><Member key={m.id} m={m} rates={rates} onChange={nm=>upd(m.id,nm)} onRemove={()=>rm(m.id)}/>)}
           <div className="addmem">
             <button onClick={()=>setMembers([...members,newFooting()])}>+ Footing</button>
             <button onClick={()=>setMembers([...members,newWall()])}>+ Wall</button>
+            <button onClick={()=>setMembers([...members,newPier()])}>+ Pier</button>
+            <button onClick={()=>setMembers([...members,newSlab()])}>+ Slab</button>
+            <button onClick={()=>setMembers([...members,newGradebeam()])}>+ Grade beam</button>
           </div>
         </section>
 
@@ -425,6 +477,8 @@ function App(){
               <div className="k">Direct cost</div><div className="v">{money2(t.directCost)}</div>
               <div className="k">Overhead</div><div className="v">{money2(t.overhead)}</div>
               <div className="k">Profit</div><div className="v">{money2(t.profit)}</div>
+              {t.tax>0.005 && <><div className="k">Subtotal</div><div className="v">{money2(t.preTax)}</div>
+              <div className="k">Sales tax</div><div className="v">{money2(t.tax)}</div></>}
               <div className="k big">Bid total</div><div className="v big">{money2(t.bid)}</div>
               <div className="k">Total labor</div><div className="v">{t.laborHours.toFixed(1)} hrs</div>
               <div className="k">Steel to buy</div><div className="v">{t.buyTons.toFixed(2)} t</div>
