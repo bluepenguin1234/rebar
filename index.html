@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#12212b" />
+<title>Rebar Bid</title>
+<style>
+  :root{
+    --concrete:#e7eaee; --card:#ffffff; --ink:#141a1f; --muted:#5c6a75;
+    --steel:#1f5673; --hair:#c9d2d9; --hivis:#ff5a1f; --field:#f4f6f8;
+    --shadow:0 1px 0 rgba(18,33,43,.06),0 8px 24px rgba(18,33,43,.06);
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --ui:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--concrete);color:var(--ink);font-family:var(--ui);-webkit-text-size-adjust:100%;line-height:1.35;padding-bottom:104px}
+  .wrap{max-width:680px;margin:0 auto;padding:0 14px}
+  header.top{position:sticky;top:0;z-index:20;background:#12212b;color:#fff;padding:12px 14px;border-bottom:3px solid var(--hivis)}
+  header.top .wrap{padding:0}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand h1{font-size:19px;letter-spacing:.02em;margin:0;font-weight:700}
+  .brand .sub{font-size:11px;color:#9db2c0;text-transform:uppercase;letter-spacing:.14em}
+  .rule{height:2px;background:repeating-linear-gradient(90deg,#2c4453 0 14px,transparent 14px 22px);margin-top:9px;opacity:.8}
+  section{margin:16px 0}
+  .h{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
+  .h h2{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin:0;font-weight:700}
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:12px;box-shadow:var(--shadow);padding:12px;margin-bottom:12px}
+  .member .mhead{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+  .tag{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;letter-spacing:.06em;text-transform:uppercase}
+  .tag.footing{background:#e7f0f5;color:var(--steel)} .tag.wall{background:#fdece4;color:#c0410f}
+  input,select,button{font-family:var(--ui);font-size:16px}
+  input[type=text],input[type=number],select{width:100%;padding:11px 10px;border:1px solid var(--hair);border-radius:9px;background:var(--field);color:var(--ink);appearance:none}
+  input:focus,select:focus{outline:2px solid var(--steel);outline-offset:1px;border-color:var(--steel)}
+  label.fld{display:block} label.fld .lab{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:0 0 3px 2px;font-weight:700}
+  .lbl-input{border:none;background:transparent;font-size:16px;font-weight:700;padding:6px 2px;flex:1;min-width:0}
+  .lbl-input:focus{outline:none;border-bottom:2px solid var(--hivis)}
+  .lines{border-top:1px dashed var(--hair);padding-top:10px;margin-top:4px}
+  .line{background:var(--field);border:1px solid var(--hair);border-radius:10px;padding:9px;margin-bottom:9px}
+  .line .modes{display:flex;gap:6px;margin-bottom:8px}
+  .chip{flex:1;text-align:center;padding:7px;border-radius:8px;border:1px solid var(--hair);background:#fff;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .chip.on{background:var(--steel);color:#fff;border-color:var(--steel)}
+  .grid{display:grid;gap:8px} .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:1fr 1fr 1fr} .g4{grid-template-columns:repeat(4,1fr)}
+  .line .lf{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:7px;text-align:right} .line .lf b{color:var(--ink)}
+  .splice{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:700;color:#c0410f;background:#fdece4;border-radius:5px;padding:1px 5px;margin-right:6px}
+  .mini{background:none;border:none;color:var(--muted);font-size:12px;font-weight:700;padding:6px 4px;cursor:pointer} .mini:hover{color:var(--hivis)}
+  .addline{width:100%;border:1px dashed var(--hair);background:#fff;color:var(--steel);border-radius:9px;padding:9px;font-weight:700;font-size:13px;cursor:pointer}
+  .addmem{display:flex;gap:10px} .addmem button{flex:1;border:1px solid var(--steel);background:#fff;color:var(--steel);border-radius:11px;padding:13px;font-weight:700;font-size:14px;cursor:pointer} .addmem button:active{background:#eef4f7}
+  details.rates summary{list-style:none;cursor:pointer} details.rates summary::-webkit-details-marker{display:none}
+  .ratehead{display:flex;align-items:center;justify-content:space-between} .caret{font-family:var(--mono);color:var(--muted);font-size:12px}
+  .seg{display:flex;gap:6px;margin-top:4px} .seg .chip{flex:1}
+  .sov{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+  .sov th,.sov td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--hair)}
+  .sov th:first-child,.sov td:first-child{text-align:left;font-family:var(--ui)}
+  .sov th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+  .sum{display:grid;grid-template-columns:1fr auto;gap:2px 12px;font-family:var(--mono);font-size:13px;margin-top:12px}
+  .sum .k{color:var(--muted)} .sum .v{text-align:right} .sum .big{font-size:15px;font-weight:700}
+  .exportbtn{width:100%;margin-top:12px;border:1px solid var(--steel);background:#fff;color:var(--steel);border-radius:10px;padding:11px;font-weight:700;cursor:pointer}
+  .total{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#12212b;color:#fff;border-top:3px solid var(--hivis);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+  .total .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .total .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#9db2c0;font-weight:700}
+  .total .amt{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--hivis);line-height:1}
+  .total .meta{font-family:var(--mono);font-size:11px;color:#c3d0da;text-align:right}
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:22px 8px}
+  .note{font-size:11px;color:var(--muted);margin:8px 2px 0;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+/* ---------- verified calc engine (mirrors calc.js, node-tested 24/24) ---------- */
+const UNIT_WEIGHT = {3:0.376,4:0.668,5:1.043,6:1.502,7:2.044,8:2.670,9:3.400,10:4.303,11:5.313};
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const barDiaIn = size => num(size)/8;
+const lapLenFt = (size,lapFactor) => lapFactor*barDiaIn(size)/12;
+function lineCount(l){ if(l.mode==="count") return num(l.count);
+  const s=num(l.spacing); if(s<=0) return 0; return (Math.floor((num(l.run)*12)/s)+1)*(num(l.layers)||1); }
+const lineLF = l => lineCount(l)*num(l.lengthEach);
+function lineGeom(l,rates){
+  const count=lineCount(l), cut=num(l.lengthEach), stock=num(rates.stockLength)||0, lap=lapLenFt(num(l.size),num(rates.lapFactor));
+  let splicesPerBar=0, installedEachFt=cut;
+  if(stock>0 && cut>stock && lap>0){ splicesPerBar=Math.ceil(cut/stock)-1; installedEachFt=cut+splicesPerBar*lap; }
+  const uw=UNIT_WEIGHT[num(l.size)]||0;
+  return {size:num(l.size),count,cut,splicesPerBar,installedEachFt,installedLF:count*installedEachFt,installedWeight:count*installedEachFt*uw};
+}
+function nestMember(geoms,rates){
+  const stock=num(rates.stockLength)||0, bySize={}, bucket={};
+  geoms.forEach(g=>{ if(g.count<=0) return; const k=g.size+"@"+g.installedEachFt.toFixed(4);
+    if(!bucket[k]) bucket[k]={size:g.size,len:g.installedEachFt,count:0}; bucket[k].count+=g.count; });
+  Object.values(bucket).forEach(b=>{ if(!bySize[b.size]) bySize[b.size]={sticks:0,buyFt:0};
+    if(stock<=0){ bySize[b.size].buyFt+=b.len*b.count; }
+    else if(b.len>stock){ const s=Math.ceil((b.len*b.count)/stock); bySize[b.size].sticks+=s; bySize[b.size].buyFt+=s*stock; }
+    else{ const per=Math.floor(stock/b.len)||1; const s=Math.ceil(b.count/per); bySize[b.size].sticks+=s; bySize[b.size].buyFt+=s*stock; } });
+  return bySize;
+}
+function estimate(members,r){
+  const contMult=1+num(r.contingencyPct)/100, coatingMult=(r.coating==="epoxy")?(1+num(r.epoxyPct)/100):1;
+  const rows=members.map(m=>{
+    const geoms=(m.lines||[]).map(l=>lineGeom(l,r));
+    const installedWeight=geoms.reduce((s,g)=>s+g.installedWeight,0);
+    const pieces=geoms.reduce((s,g)=>s+g.count,0);
+    const nest=nestMember(geoms,r);
+    const buyWeight=Object.entries(nest).reduce((s,[sz,v])=>s+v.buyFt*(UNIT_WEIGHT[sz]||0),0)*contMult;
+    const installedTons=installedWeight/2000, buyTons=buyWeight/2000;
+    const materialCost=buyTons*num(r.pricePerTon)*coatingMult;
+    const laborHours=installedTons*num(m.mhPerTon), laborCost=laborHours*num(r.crewWage);
+    const accessories=installedTons*num(r.accessoriesPerTon);
+    return {label:m.label,type:m.type,pieces,geoms,nest,installedTons,buyTons,materialCost,laborHours,laborCost,accessories,lineTotal:materialCost+laborCost+accessories};
+  });
+  const bySize={};
+  rows.forEach(row=>{
+    row.geoms.forEach(g=>{ if(g.count<=0) return; const s=g.size;
+      if(!bySize[s]) bySize[s]={size:s,pieces:0,installedLb:0,sticks:0,buyLb:0}; bySize[s].pieces+=g.count; bySize[s].installedLb+=g.installedWeight; });
+    Object.entries(row.nest).forEach(([sz,v])=>{ if(!bySize[sz]) bySize[sz]={size:+sz,pieces:0,installedLb:0,sticks:0,buyLb:0};
+      bySize[sz].sticks+=v.sticks; bySize[sz].buyLb+=v.buyFt*(UNIT_WEIGHT[sz]||0)*contMult; });
+  });
+  const sizeSummary=Object.values(bySize).sort((a,b)=>a.size-b.size);
+  const sum=k=>rows.reduce((s,x)=>s+x[k],0);
+  const directCost=sum("lineTotal")+num(r.otherCost);
+  const withOverhead=directCost*(1+num(r.overheadPct)/100), bid=withOverhead*(1+num(r.profitPct)/100);
+  return {rows,sizeSummary,totals:{installedTons:sum("installedTons"),buyTons:sum("buyTons"),pieces:sum("pieces"),
+    materialCost:sum("materialCost"),laborCost:sum("laborCost"),laborHours:sum("laborHours"),accessories:sum("accessories"),
+    otherCost:num(r.otherCost),coatingMult,directCost,overhead:withOverhead-directCost,withOverhead,profit:bid-withOverhead,bid}};
+}
+/* ------------------------------------------------------------------------ */
+
+const SIZES=[3,4,5,6,7,8,9,10,11];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const money=n=>"$"+Math.round(n).toLocaleString();
+const money2=n=>"$"+n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const newFooting=()=>({id:uid(),type:"footing",label:"Strip footing",mhPerTon:12,lines:[{id:uid(),mode:"count",size:5,count:6,lengthEach:100}]});
+const newWall=()=>({id:uid(),type:"wall",label:"Foundation wall",mhPerTon:9.5,lines:[
+  {id:uid(),mode:"spacing",size:4,run:20,spacing:12,lengthEach:8,layers:2},
+  {id:uid(),mode:"spacing",size:4,run:8,spacing:12,lengthEach:20,layers:2}]});
+const newCountLine=()=>({id:uid(),mode:"count",size:5,count:1,lengthEach:20});
+const newSpacingLine=()=>({id:uid(),mode:"spacing",size:4,run:20,spacing:12,lengthEach:8,layers:1});
+
+function Field({lab,children}){return <label className="fld"><span className="lab">{lab}</span>{children}</label>;}
+function NumIn(p){return <input type="number" inputMode="decimal" {...p}/>;}
+function SizeSel({value,onChange}){return <select value={value} onChange={onChange}>{SIZES.map(s=><option key={s} value={s}>{"#"+s}</option>)}</select>;}
+
+function Line({line,rates,onChange,onRemove}){
+  const set=(k,v)=>onChange({...line,[k]:v});
+  const g=lineGeom(line,rates);
+  return (
+    <div className="line">
+      <div className="modes">
+        <div className={"chip"+(line.mode==="count"?" on":"")} onClick={()=>set("mode","count")}>By count</div>
+        <div className={"chip"+(line.mode==="spacing"?" on":"")} onClick={()=>set("mode","spacing")}>By spacing</div>
+      </div>
+      {line.mode==="count" ? (
+        <div className="grid g3">
+          <Field lab="Bar"><SizeSel value={line.size} onChange={e=>set("size",e.target.value)}/></Field>
+          <Field lab="Count"><NumIn value={line.count} onChange={e=>set("count",e.target.value)}/></Field>
+          <Field lab="Length ft"><NumIn value={line.lengthEach} onChange={e=>set("lengthEach",e.target.value)}/></Field>
+        </div>
+      ) : (
+        <div>
+          <div className="grid g4">
+            <Field lab="Bar"><SizeSel value={line.size} onChange={e=>set("size",e.target.value)}/></Field>
+            <Field lab="Run ft"><NumIn value={line.run} onChange={e=>set("run",e.target.value)}/></Field>
+            <Field lab="Spc in"><NumIn value={line.spacing} onChange={e=>set("spacing",e.target.value)}/></Field>
+            <Field lab="Layers"><NumIn value={line.layers} onChange={e=>set("layers",e.target.value)}/></Field>
+          </div>
+          <div style={{marginTop:8}}><Field lab="Bar length ft"><NumIn value={line.lengthEach} onChange={e=>set("lengthEach",e.target.value)}/></Field></div>
+        </div>
+      )}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <button className="mini" onClick={onRemove}>Remove bar</button>
+        <div className="lf">
+          {g.splicesPerBar>0 && <span className="splice">{g.splicesPerBar} splice{g.splicesPerBar>1?"s":""}/bar</span>}
+          {g.count} bars · <b>{Math.round(g.installedLF)} LF</b> · <b>{Math.round(g.installedWeight)} lb</b>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Member({m,rates,onChange,onRemove}){
+  const set=(k,v)=>onChange({...m,[k]:v});
+  const setLine=(id,l)=>set("lines",m.lines.map(x=>x.id===id?l:x));
+  const rmLine=id=>set("lines",m.lines.filter(x=>x.id!==id));
+  const wt=(m.lines||[]).reduce((s,l)=>s+lineGeom(l,rates).installedWeight,0);
+  return (
+    <div className="card member">
+      <div className="mhead">
+        <span className={"tag "+m.type}>{m.type}</span>
+        <input className="lbl-input" value={m.label} onChange={e=>set("label",e.target.value)} aria-label="Member name"/>
+        <button className="mini" onClick={onRemove}>Delete</button>
+      </div>
+      <div className="grid g2" style={{marginBottom:10}}>
+        <Field lab="Man-hours / ton"><NumIn value={m.mhPerTon} onChange={e=>set("mhPerTon",e.target.value)}/></Field>
+        <div style={{alignSelf:"end",textAlign:"right",fontFamily:"var(--mono)",fontSize:13,color:"var(--muted)",paddingBottom:8}}>
+          {Math.round(wt).toLocaleString()} lb · <b style={{color:"var(--ink)"}}>{(wt/2000).toFixed(2)} t</b>
+        </div>
+      </div>
+      <div className="lines">
+        {m.lines.map(l=><Line key={l.id} line={l} rates={rates} onChange={nl=>setLine(l.id,nl)} onRemove={()=>rmLine(l.id)}/>)}
+        <div className="grid g2" style={{marginTop:2}}>
+          <button className="addline" onClick={()=>set("lines",[...m.lines,newCountLine()])}>+ Bars by count</button>
+          <button className="addline" onClick={()=>set("lines",[...m.lines,newSpacingLine()])}>+ Bars by spacing</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Rates({r,onChange}){
+  const f=(k,lab)=> <Field lab={lab}><NumIn value={r[k]} onChange={e=>onChange({...r,[k]:e.target.value})}/></Field>;
+  return (
+    <details className="rates card" open>
+      <summary><div className="ratehead">
+        <h2 style={{fontSize:12,textTransform:"uppercase",letterSpacing:".14em",color:"var(--muted)",margin:0}}>Rates &amp; markup</h2>
+        <span className="caret">tap to fold</span></div></summary>
+      <div className="grid g2" style={{marginTop:12}}>
+        {f("pricePerTon","Steel $/ton")}
+        {f("crewWage","Crew $/hr loaded")}
+        {f("lapFactor","Lap (× bar dia)")}
+        {f("stockLength","Stock length ft")}
+        {f("contingencyPct","Contingency %")}
+        {f("accessoriesPerTon","Accessories $/ton")}
+        {f("overheadPct","Overhead %")}
+        {f("profitPct","Profit %")}
+        {f("otherCost","Freight / fab $")}
+        {r.coating==="epoxy" && f("epoxyPct","Epoxy premium %")}
+      </div>
+      <div style={{marginTop:10}}>
+        <span className="lab" style={{display:"block",fontSize:10,textTransform:"uppercase",letterSpacing:".1em",color:"var(--muted)",fontWeight:700,margin:"0 0 3px 2px"}}>Coating</span>
+        <div className="seg">
+          <div className={"chip"+(r.coating!=="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"black"})}>Black</div>
+          <div className={"chip"+(r.coating==="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"epoxy"})}>Epoxy</div>
+        </div>
+      </div>
+      <div className="note">Laps auto-add on any run longer than stock ({r.stockLength||"—"} ft) at {r.lapFactor||0}× bar diameter, counting as placed steel. Material is bought as whole sticks (per-member nesting) plus contingency; it does not share offcuts across members. Epoxy premium applies to material only.</div>
+    </details>
+  );
+}
+
+const DEFAULT_RATES={pricePerTon:1300,crewWage:85,lapFactor:40,stockLength:40,
+  contingencyPct:3,accessoriesPerTon:40,overheadPct:10,profitPct:10,otherCost:0,coating:"black",epoxyPct:25};
+const sampleMembers=()=>[newFooting(),newWall()];
+
+function App(){
+  const [members,setMembers]=useState(sampleMembers());
+  const [rates,setRates]=useState(DEFAULT_RATES);
+  const est=useMemo(()=>estimate(members,rates),[members,rates]);
+  const upd=(id,m)=>setMembers(members.map(x=>x.id===id?m:x));
+  const rm=id=>setMembers(members.filter(x=>x.id!==id));
+  const loadSample=()=>{setMembers(sampleMembers());setRates(DEFAULT_RATES);};
+  const resetAll=()=>{setMembers([]);setRates(DEFAULT_RATES);};
+  const t=est.totals;
+  const perTon=t.installedTons>0 ? t.bid/t.installedTons : 0;
+
+  const exportCSV=()=>{
+    const rows=[];
+    rows.push(["SCHEDULE OF VALUES"]);
+    rows.push(["Item","Type","Pieces","Tons placed","Tons buy","Labor hrs","Material $","Labor $","Accessories $","Line total $"]);
+    est.rows.forEach(x=>rows.push([x.label,x.type,x.pieces,x.installedTons.toFixed(3),x.buyTons.toFixed(3),
+      x.laborHours.toFixed(1),x.materialCost.toFixed(2),x.laborCost.toFixed(2),x.accessories.toFixed(2),x.lineTotal.toFixed(2)]));
+    rows.push([]);
+    rows.push(["Direct cost","","","","","","","","",t.directCost.toFixed(2)]);
+    rows.push(["Overhead","","","","","","","","",t.overhead.toFixed(2)]);
+    rows.push(["Profit","","","","","","","","",t.profit.toFixed(2)]);
+    rows.push(["BID TOTAL","","","","","","","","",t.bid.toFixed(2)]);
+    rows.push([]); rows.push(["WEIGHT SUMMARY"]);
+    rows.push(["Bar size","Pieces","Installed lb","Sticks to order","Buy lb"]);
+    est.sizeSummary.forEach(s=>rows.push(["#"+s.size,s.pieces,s.installedLb.toFixed(0),s.sticks,s.buyLb.toFixed(0)]));
+    const csv=rows.map(r=>r.map(c=>`"${(c??"")}"`).join(",")).join("\n");
+    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    const a=document.createElement("a");a.href=url;a.download="rebar-bid.csv";a.click();URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div>
+      <header className="top"><div className="wrap">
+        <div className="brand"><h1>REBAR&nbsp;BID</h1><span className="sub">footings &amp; walls</span></div>
+        <div className="rule"></div></div></header>
+
+      <div className="wrap">
+        <section>
+          <div className="h"><h2>Members</h2>
+            <div style={{display:"flex",gap:6}}>
+              <button className="mini" onClick={loadSample}>Load sample</button>
+              <button className="mini" onClick={resetAll}>Reset</button>
+            </div>
+          </div>
+          {members.length===0 && <div className="card empty">No members yet. Add a footing or wall to start.</div>}
+          {members.map(m=><Member key={m.id} m={m} rates={rates} onChange={nm=>upd(m.id,nm)} onRemove={()=>rm(m.id)}/>)}
+          <div className="addmem">
+            <button onClick={()=>setMembers([...members,newFooting()])}>+ Footing</button>
+            <button onClick={()=>setMembers([...members,newWall()])}>+ Wall</button>
+          </div>
+        </section>
+
+        <section><Rates r={rates} onChange={setRates}/></section>
+
+        <section>
+          <div className="h"><h2>Schedule of values</h2></div>
+          <div className="card">
+            <table className="sov">
+              <thead><tr><th>Item</th><th>Pcs</th><th>Tons</th><th>Material</th><th>Labor</th><th>Total</th></tr></thead>
+              <tbody>
+                {est.rows.map((x,i)=>(<tr key={i}>
+                  <td>{x.label}</td><td>{x.pieces}</td><td>{x.buyTons.toFixed(2)}</td>
+                  <td>{money(x.materialCost)}</td><td>{money(x.laborCost)}</td><td>{money(x.lineTotal)}</td>
+                </tr>))}
+                {est.rows.length===0 && <tr><td colSpan="6" style={{textAlign:"center",color:"var(--muted)"}}>&mdash;</td></tr>}
+              </tbody>
+            </table>
+            <div className="sum">
+              <div className="k">Direct cost</div><div className="v">{money2(t.directCost)}</div>
+              <div className="k">Overhead</div><div className="v">{money2(t.overhead)}</div>
+              <div className="k">Profit</div><div className="v">{money2(t.profit)}</div>
+              <div className="k big">Bid total</div><div className="v big">{money2(t.bid)}</div>
+              <div className="k">Total labor</div><div className="v">{t.laborHours.toFixed(1)} hrs</div>
+              <div className="k">Steel to buy</div><div className="v">{t.buyTons.toFixed(2)} t</div>
+              <div className="k big">Bid &divide; ton installed</div><div className="v big">{perTon>0?money(perTon)+"/t":"—"}</div>
+            </div>
+            <button className="exportbtn" onClick={exportCSV}>Export SOV + weight summary (CSV)</button>
+          </div>
+        </section>
+
+        <section>
+          <div className="h"><h2>Weight summary — to order</h2></div>
+          <div className="card">
+            <table className="sov">
+              <thead><tr><th>Bar</th><th>Pieces</th><th>Installed lb</th><th>Sticks</th><th>Buy lb</th></tr></thead>
+              <tbody>
+                {est.sizeSummary.map(s=>(<tr key={s.size}>
+                  <td>{"#"+s.size}</td><td>{s.pieces}</td><td>{Math.round(s.installedLb).toLocaleString()}</td>
+                  <td>{s.sticks}</td><td>{Math.round(s.buyLb).toLocaleString()}</td>
+                </tr>))}
+                {est.sizeSummary.length===0 && <tr><td colSpan="5" style={{textAlign:"center",color:"var(--muted)"}}>&mdash;</td></tr>}
+              </tbody>
+            </table>
+            <div className="note">Sticks = whole {rates.stockLength||"—"} ft bars to order per size (per-member nesting, so slightly conservative). Installed lb is placed steel including laps; buy lb includes contingency.</div>
+          </div>
+          <div className="note">Quick-bid tool: replaces the arithmetic, not the takeoff. You read the drawings and enter members; it handles weight, laps, stock nesting, coating, labor, and markup. Not a stamped estimate, and it does not share drop across members the way full optimization software does.</div>
+        </section>
+      </div>
+
+      <div className="total"><div className="wrap">
+        <div><div className="lbl">Bid total</div><div className="amt">{money(t.bid)}</div></div>
+        <div className="meta">{perTon>0?money(perTon)+"/ton":""}<br/>{t.buyTons.toFixed(2)} tons · {t.laborHours.toFixed(0)} hrs</div>
+      </div></div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
