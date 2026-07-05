@@ -52,6 +52,9 @@
   .addline{width:100%;border:1px dashed var(--hair);background:#fff;color:var(--steel);border-radius:9px;padding:9px;font-weight:700;font-size:13px;cursor:pointer}
   .addmem{display:flex;gap:8px;flex-wrap:wrap} .addmem button{flex:1 1 30%;min-width:92px;border:1px solid var(--steel);background:#fff;color:var(--steel);border-radius:11px;padding:12px 6px;font-weight:700;font-size:13px;cursor:pointer} .addmem button:active{background:#eef4f7}
   details.rates summary{list-style:none;cursor:pointer} details.rates summary::-webkit-details-marker{display:none}
+  details.adv summary{list-style:none;cursor:pointer} details.adv summary::-webkit-details-marker{display:none}
+  .advtoggle{display:inline-block;font-size:12px;font-weight:700;color:var(--steel);border:1px dashed var(--hair);border-radius:8px;padding:8px 11px;background:var(--field)}
+  details.adv[open] .advtoggle{color:var(--muted)}
   .ratehead{display:flex;align-items:center;justify-content:space-between} .caret{font-family:var(--mono);color:var(--muted);font-size:12px}
   .seg{display:flex;gap:6px;margin-top:4px} .seg .chip{flex:1}
   .sov{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
@@ -291,24 +294,29 @@ function Rates({r,onChange}){
       <div className="grid g2" style={{marginTop:12}}>
         {f("pricePerTon","Steel $/ton")}
         {f("crewWage","Crew $/hr loaded")}
-        {f("lapFactor","Lap (× bar dia)")}
-        {f("stockLength","Stock length ft")}
-        {f("contingencyPct","Contingency %")}
-        {f("accessoriesPerTon","Accessories $/ton")}
-        {f("overheadPct","Overhead %")}
         {f("profitPct","Profit %")}
-        {f("otherCost","Freight / fab $")}
-        {f("taxPct","Sales tax %")}
-        {r.coating==="epoxy" && f("epoxyPct","Epoxy premium %")}
       </div>
-      <div style={{marginTop:10}}>
-        <span className="lab" style={{display:"block",fontSize:10,textTransform:"uppercase",letterSpacing:".1em",color:"var(--muted)",fontWeight:700,margin:"0 0 3px 2px"}}>Coating</span>
-        <div className="seg">
-          <div className={"chip"+(r.coating!=="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"black"})}>Black</div>
-          <div className={"chip"+(r.coating==="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"epoxy"})}>Epoxy</div>
+      <details className="adv" style={{marginTop:12}}>
+        <summary><span className="advtoggle">Advanced settings ▾</span></summary>
+        <div className="grid g2" style={{marginTop:12}}>
+          {f("lapFactor","Lap (× bar dia)")}
+          {f("stockLength","Stock length ft")}
+          {f("contingencyPct","Contingency %")}
+          {f("accessoriesPerTon","Accessories $/ton")}
+          {f("overheadPct","Overhead %")}
+          {f("otherCost","Freight / fab $")}
+          {f("taxPct","Sales tax %")}
+          {r.coating==="epoxy" && f("epoxyPct","Epoxy premium %")}
         </div>
-      </div>
-      <div className="note">Laps auto-add on any run longer than stock ({r.stockLength||"—"} ft) at {r.lapFactor||0}× bar diameter, counting as placed steel. Material is bought as whole sticks (per-member nesting) plus contingency; it does not share offcuts across members. Epoxy premium applies to material only.</div>
+        <div style={{marginTop:10}}>
+          <span className="lab" style={{display:"block",fontSize:10,textTransform:"uppercase",letterSpacing:".1em",color:"var(--muted)",fontWeight:700,margin:"0 0 3px 2px"}}>Coating</span>
+          <div className="seg">
+            <div className={"chip"+(r.coating!=="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"black"})}>Black</div>
+            <div className={"chip"+(r.coating==="epoxy"?" on":"")} onClick={()=>onChange({...r,coating:"epoxy"})}>Epoxy</div>
+          </div>
+        </div>
+        <div className="note">Laps auto-add on any run longer than stock ({r.stockLength||"—"} ft) at {r.lapFactor||0}× bar diameter, counting as placed steel. Material is bought as whole sticks (per-member nesting) plus contingency; it does not share offcuts across members. Epoxy premium applies to material only.</div>
+      </details>
     </details>
   );
 }
